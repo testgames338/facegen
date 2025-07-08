@@ -1,1 +1,11 @@
-inference
+streamlit
+torch>=2.0.0
+torchvision
+diffusers>=0.20.0
+transformers
+insightface==0.7.3
+onnxruntime-gpu  # Use onnxruntime if no GPU
+opencv-python
+Pillow
+scipy
+numpy
