@@ -9,24 +9,24 @@ import cv2
 import numpy as np
 import os
 
-# Load face analysis
-face_app = FaceAnalysis(name="buffalo_l", providers=["CUDAExecutionProvider", "CPUExecutionProvider"])
+# Load face analysis (CPU-only for Streamlit Cloud)
+face_app = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
 face_app.prepare(ctx_id=0, det_size=(512, 512))
 
 # Load ControlNet (face guidance)
 controlnet = ControlNetModel.from_pretrained(
     "lllyasviel/sd-controlnet-openpose",
-    torch_dtype=torch.float16
+    torch_dtype=torch.float32
 )
 
-# Load Stable Diffusion pipeline
+# Load Stable Diffusion pipeline (CPU-compatible config)
 pipe = StableDiffusionControlNetPipeline.from_pretrained(
     "runwayml/stable-diffusion-v1-5",
     controlnet=controlnet,
-    torch_dtype=torch.float16
+    torch_dtype=torch.float32
 )
-pipe.to("cuda")
-pipe.enable_xformers_memory_efficient_attention()
+pipe.to("cpu")
+
 
 def extract_face_landmarks(pil_image):
     np_img = np.array(pil_image)
@@ -35,6 +35,7 @@ def extract_face_landmarks(pil_image):
         return None
     landmarks = faces[0].kps  # facial keypoints
     return landmarks
+
 
 def run_instantid(face_image: Image.Image, prompt: str) -> Image.Image:
     try:
@@ -48,7 +49,7 @@ def run_instantid(face_image: Image.Image, prompt: str) -> Image.Image:
         control_map = np.zeros((512, 512, 3), dtype=np.uint8)
         for (x, y) in landmarks:
             cv2.circle(control_map, (int(x), int(y)), 4, (255, 255, 255), -1)
-        control_tensor = transforms.ToTensor()(Image.fromarray(control_map)).unsqueeze(0).half().to("cuda")
+        control_tensor = transforms.ToTensor()(Image.fromarray(control_map)).unsqueeze(0).to("cpu")
 
         # Generate portrait
         output = pipe(prompt, image=control_tensor, num_inference_steps=30).images[0]
