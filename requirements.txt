@@ -1,10 +1,11 @@
 streamlit
-torch>=2.0.0
+torch
 torchvision
-diffusers>=0.20.0
+torchaudio
+diffusers
 transformers
-insightface==0.7.3
-onnxruntime-gpu  # Use onnxruntime if no GPU
+insightface
+onnxruntime-gpu
 opencv-python
 Pillow
 scipy
